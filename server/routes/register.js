@@ -1,8 +1,12 @@
 const express = require('express');
+var app = express();
 const router = express.Router();
 const {check,validationResult} = require('express-validator'); 
 const bcrypt= require('bcrypt');
 const jwt= require('jsonwebtoken');
+
+// const cors = require('cors')
+// app.use(cors())
 
 // router.post('/', (req,res) => {
 //     res.send("user registered!")
@@ -18,17 +22,21 @@ router.post('/',
     check('password', 'Password at least 6 character long').isLength({ min: 6 })
 ],
 async (req,res) => {
+    // console.log("----------");
+    // console.log("backendddd");
     const errors= validationResult(req);
+    // console.log(req.body);
     if(!errors.isEmpty()){
         return res.status(400).json( {error: errors.array()} )
     }
     // res.send("succesfully!")
-
+    
     const {name,email,password} = req.body
     try{
 
         let user = await User.findOne({email})
         if(user){
+            console.log('user already exists')
             return res.status(400).json({msg:'user already exists!'})
             // return res.status(400).json({"id":user.id, "_id":user._id})
         }
@@ -54,6 +62,8 @@ async (req,res) => {
               res.json({ token })
            }
         )
+
+        // console.log("jwttt")
 
     }catch(err){
         console.error(err.message)

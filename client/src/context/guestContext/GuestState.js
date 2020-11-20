@@ -9,8 +9,13 @@ import {
     REMOVE_GUEST,
     UPDATE_GUEST,
     EDIT_GUEST,
-    CLEAR_EDIT
+    CLEAR_EDIT,
+    GET_GUESTS,
+    GUESTS_ERROR,
+    CLEAR_GUESTS
 } from '../types';
+import axios from 'axios';
+import setToken from '../../utils/setToken';
 
 const GuestState= (props) => {
     
@@ -18,55 +23,87 @@ const GuestState= (props) => {
         filterGuest:false,
         search:null,
         edit:null,
-        guests:[
-            {
-                id:1,
-                name:"Tanushree",
-                phone:"8398429",
-                diet:"veg",
-                isconfirmed:false
-            },
-            {
-                id:2,
-                name:"Abhi",
-                phone:"8398429",
-                diet:"non-veg",
-                isconfirmed:true
-            },
-            {
-                id:3,
-                name:"Kirti",
-                phone:"8338429",
-                diet:"veg",
-                isconfirmed:true
-            }
-        ]
+        guests:[],
+        errors : null
     }
 
     const [state,dispatch] = useReducer(guestReducer,initialState);
 
-    const addGuest = (guest) => {
-        guest.id=Date.now();
-        guest.isconfirmed=false;
+    // get guests
+    const getGuests = async () => {
+        if(localStorage.token){
+            setToken(localStorage.token)
+        }
+        try {
+        const res = await axios.get('/guests')
         dispatch({
-            type:ADD_GUEST,
-            payload:guest
+            type: GET_GUESTS,
+            payload: res.data
         })
+        } catch (err) {
+        dispatch({
+            type: GUESTS_ERROR,
+            payload: err.response.msg
+        })
+        }
     }
 
-    const removeGuest = (id) => {
-        dispatch({
-            type:REMOVE_GUEST,
-            payload:id
-        })
+    const addGuest = async(guest) => {
+        // guest.id=Date.now(); will come from backend
+        const config = {
+            'Content-Type': 'application/json'
+        }
+        try {
+            // guest.isconfirmed=false; will come from backendl
+            const res = await axios.post('/guests', guest, config)
+            dispatch({
+                type: ADD_GUEST,
+                payload: res.data
+            })
+        } catch (err) {
+            dispatch({
+                type: GUESTS_ERROR,
+                payload: err.response.msg
+            })
+        }
+    }
+
+    const removeGuest = async(id) => {
+        try {
+            await axios.delete(`/guests/${id}`)
+            dispatch({
+              type: REMOVE_GUEST,
+              payload: id
+            })
+          } catch (err) {
+            dispatch({
+              type: GUESTS_ERROR,
+              payload: err.response.msg
+            })
+          }
     }
 
     //isconfirmed 
-    const updateGuest = (guest) => {
-        dispatch({
-            type:UPDATE_GUEST,
-            payload:guest
-        })
+    const updateGuest = async(guest) => {
+        const config = {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+          try {
+            const res = await axios.put(`/guests/${guest._id}`, guest, config)
+            dispatch({
+              type: UPDATE_GUEST,
+              payload: res.data
+            })
+            getGuests()
+      
+          } catch (err) {
+            dispatch({
+              type: GUESTS_ERROR,
+              payload: err.response
+            })
+          }
     }
 
     //editing name and ph etc
@@ -80,6 +117,12 @@ const GuestState= (props) => {
     const clearEdit = () => {
         dispatch({
             type:CLEAR_EDIT
+        })
+    }
+
+    const clearGuests = () => {
+        dispatch({
+            type:CLEAR_GUESTS
         })
     }
 
@@ -117,7 +160,9 @@ const GuestState= (props) => {
                 updateGuest,
                 editGuest,
                 clearEdit,
-                edit: state.edit
+                edit: state.edit,
+                getGuests,
+                clearGuests
                 }}>
             {props.children}
         </GuestContext.Provider>

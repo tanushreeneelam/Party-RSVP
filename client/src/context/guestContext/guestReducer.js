@@ -7,13 +7,36 @@ import {
     TOGGLE_FILTER,
     UPDATE_GUEST,
     EDIT_GUEST,
-    CLEAR_EDIT
+    CLEAR_EDIT,
+    GET_GUESTS,
+    GUESTS_ERROR,
+    CLEAR_GUESTS
 } from '../types';
 
 function guestReducer(state,action) {
     const {type,payload} = action;
 
     switch(type){
+        case GET_GUESTS:
+            return{
+                ...state,
+                guests:payload
+            }
+        case GUESTS_ERROR:
+            return{
+                ...state,
+                guests:[],
+                errors:payload
+            }
+        case CLEAR_GUESTS:
+            return{
+                ...state,
+                filterGuest:false,
+                search:null,
+                edit:null,
+                guests:[],
+                errors : null
+            }
         case ADD_GUEST:
             return {
                 ...state,
@@ -22,13 +45,14 @@ function guestReducer(state,action) {
         case REMOVE_GUEST:
             return {
                 ...state,
-                guests : state.guests.filter(guest => guest.id !== payload)
+                guests : state.guests.filter(guest => guest._id !== payload)
             }
-
-        case UPDATE_GUEST:
+        
+        //isconfirmed
+        case UPDATE_GUEST: 
             return {
                 ...state,
-                guests : state.guests.map(guest => guest.id === payload.id ? payload : guest )
+                guests : state.guests.map(guest => guest._id === payload._id ? payload : guest )
             }
         
         case EDIT_GUEST:

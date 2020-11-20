@@ -1,9 +1,14 @@
 require('dotenv').config()
 const express = require('express')
+var app = express();
 const router = express.Router()
 const { check, validationResult } = require('express-validator')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+
+
+const cors = require('cors')
+app.use(cors())
 
 //can protect our routes using this
 const auth = require('../middleware/auth')
@@ -18,13 +23,15 @@ const User = require('../models/User')
 
 router.post('/',
   [
-    check('email', 'Please provide an email').isEmail(),
+    check('email', 'Please provide a valid email ID').isEmail(),
     check('password', 'Please provide the password').exists()
   ],
   async (req, res) => {
+    // console.log("----------");
     const errors = validationResult(req)
+    // console.log(errors)
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() })
+      return res.status(400).json({ error: errors.array() })
     }
     const { email, password } = req.body
     try {
@@ -66,6 +73,8 @@ router.post('/',
 // @des Get user
 // @access Private
 
+
+//using this in the loadUser function (check authState)
 
 //protecting this route using auth
 //https://blog.webdevsimplified.com/2019-12/express-middleware-in-depth/
